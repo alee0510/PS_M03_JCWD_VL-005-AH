@@ -1,0 +1,47 @@
+[
+	{
+		"id": "A8519773-D3A6-9516-293D-CCD72E38AD1F",
+		"name": "Griffin Sanders",
+		"phone": "+62-207-5734-8715",
+		"email": "non@aol.com",
+		"region": "Tanjung Pinang",
+		"bank_account": "ES1289367876107374855241",
+		"credit": "$7,472"
+	},
+	{
+		"id": "5701C566-275A-4C5D-27EE-84DD8BDB8B12",
+		"name": "Flavia Hawkins",
+		"phone": "+62-502-5057-4333",
+		"email": "cursus.a.enim@hotmail.com",
+		"region": "Yogyakarta",
+		"bank_account": "SI92460808312653116",
+		"credit": "$5,569"
+	},
+	{
+		"id": "4E6E812E-2FDE-5184-613C-EA321BD110A0",
+		"name": "Regina Brady",
+		"phone": "+62-672-0379-1560",
+		"email": "odio.a.purus@aol.com",
+		"region": "Manado",
+		"bank_account": "SI58051404641329831",
+		"credit": "$9,821"
+	},
+	{
+		"id": "135EDB56-D9CA-7CBA-9DD6-E508A5854081",
+		"name": "Griffith Glass",
+		"phone": "+62-517-6138-5050",
+		"email": "augue@icloud.com",
+		"region": "Depok",
+		"bank_account": "BG08LIQE01043897368752",
+		"credit": "$7,766"
+	},
+	{
+		"id": "85D2AAEE-2AD7-1914-13D1-CBB3911E39F4",
+		"name": "Jenna House",
+		"phone": "+62-051-0143-8621",
+		"email": "mauris@protonmail.com",
+		"region": "Bitung",
+		"bank_account": "IL758164852236323395885",
+		"credit": "$7,547"
+	}
+]
