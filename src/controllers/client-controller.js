@@ -5,7 +5,14 @@ const { post_schema, patch_schema } = require('../helpers/schema')
 const __dir = './__json__'
 
 const getClients = (req, res) => {
-    // request query params
+    // get query params
+    const sort = req.query._sort
+    const order = req.query._order || 'asc'
+
+    // TODO:
+    // 1. pagination -> query => page ? & limit ?
+
+    console.log('query : ', req.query)
     fs.readFile(
         path.join(__dir + '/clients.json'),
         (error, data) => {
@@ -13,7 +20,28 @@ const getClients = (req, res) => {
                 return res.status(500).send(`Internal Service Error.`)
             }
 
-            res.status(200).send(JSON.parse(data))
+            // parse data
+            const clients = JSON.parse(data)
+
+            // check sort
+            if (sort) {
+                clients.sort((a, b) => {
+                    const A = a[sort].toLowerCase()
+                    const B = b[sort].toLowerCase()
+
+                    if (A > B) {
+                        return order === 'asc' ? 1 : -1
+                    }
+
+                    if (A < B) {
+                        return order === 'asc' ? -1 : 1
+                    }
+
+                    return 0
+                })
+            }
+
+            res.status(200).send(clients)
         }
     )
 }
