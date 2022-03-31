@@ -5,6 +5,7 @@ const { post_schema, patch_schema } = require('../helpers/schema')
 const __dir = './__json__'
 
 const getClients = (req, res) => {
+    // request query params
     fs.readFile(
         path.join(__dir + '/clients.json'),
         (error, data) => {
@@ -71,10 +72,35 @@ const postClient = (req, res) => {
             
             // parse data
             const clients = JSON.parse(data)
-            clients.push(body)
             
             // validation -> check duplicate
             // name, email, bank_account, phone
+            let unique = true
+            for (let i = 0; i < clients.length; i++) {
+                if (clients[i].name === body.name) {
+                    unique = false
+                    break
+                }
+                if (clients[i].email === body.email) {
+                    unique = false
+                    break
+                }
+                if (clients[i].bank_account === body.bank_account) {
+                    unique = false
+                    break
+                }
+                if (clients[i].phone === body.phone) {
+                    unique = false
+                    break
+                }
+            }
+            
+            if (!unique) {
+                return res.status(400).send(`username, email, phone, & bank account has already exist.`)
+            }
+
+            // add new data
+            clients.push(body)
 
             // update data to clients.json
             fs.writeFile(
