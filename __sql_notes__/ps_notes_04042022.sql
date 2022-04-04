@@ -30,5 +30,28 @@ GROUP BY city
 ORDER BY highest_credit_limit DESC;
 
 -- 1.4 GET total customer for each country / city
+SELECT country, city, count(*) AS total_customers
+FROM customers
+GROUP BY city
+ORDER BY total_customers DESC;
+
 -- 1.5 GET total customer credit limit for each country / city
+SELECT country, city, SUM(creditLimit) AS total_credit
+FROM customers
+GROUP BY city
+ORDER BY total_credit DESC;
+
 -- 1.6 GET total customer, average credit limit, highest credit limit for each country / city
+SELECT country, city, 
+COUNT(*) AS total_customers, 
+AVG(creditLimit) AS avg_credit, 
+MAX(creditLimit) AS max
+FROM customers
+GROUP BY city
+ORDER BY country;
+
+-- HOMEWORK
+-- 1.7 GET total sales_res for each country / city
+-- 1.8 GET total customer credit, average credit limit, total customer for each sale_rep
+-- 1.9 GET sale_rep with highest total customer for each country
+-- 2.0 GET sale_rep with highest earned customer credit limit for each country
