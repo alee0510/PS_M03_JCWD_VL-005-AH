@@ -72,4 +72,24 @@ GROUP BY em1.employeeNumber
 ORDER BY total_customer DESC;
 
 -- 1.6 GET customer data with their order info (status order, order date, order quantity, detail product, dll)
--- 1.7 GET employee plus total customer and total ordered product qty
+SELECT 
+cs.customerNumber, cs.customerName,
+od.orderDate, od.status,
+odt.quantityOrdered,
+pd.productName
+FROM customers AS cs
+JOIN orders AS od ON od.customerNumber =  cs.customerNumber
+JOIN orderdetails AS odt ON odt.orderNumber =  od.orderNumber
+JOIN products AS pd ON pd.productCode =  odt.productCode;
+
+
+-- 1.7 PR :  GET employee plus total customer and total ordered product qty
+SELECT em.employeeNumber,
+CONCAT(em.firstName, ' ', em.lastName) employeeName,
+COUNT(cs.customerNumber) total_customer,
+SUM(odt.quantityOrdered) total_ordered
+FROM employees AS em
+JOIN customers AS cs ON cs.salesRepEmployeeNumber = em.employeeNumber
+JOIN orders AS od ON od.customerNumber =  cs.customerNumber
+JOIN orderdetails AS odt ON odt.orderNumber =  od.orderNumber
+GROUP BY em.employeeNumber;
