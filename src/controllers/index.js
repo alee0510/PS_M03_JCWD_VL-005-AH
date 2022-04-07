@@ -1,7 +1,5 @@
-// import * modules
-const client = require('./client-controller')
+// import * module
+const client = require('./client-controllers')
 
-// export * moules
-module.exports = {
-    client
-}
+// export * moduel
+module.exports = { client }

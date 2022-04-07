@@ -1,21 +1,30 @@
-// import
 const express = require('express')
+const dotenv = require('dotenv')
+dotenv.config()
 
-// initialize express app
+const database = require('./config')
+
+// define main app
 const app = express()
 
-// initialize middleware
+// config middleware
 app.use(express.json())
 
-// home route
-app.get('/', (req, res) => {
-    res.status(200).send(`<h1>Wellcome to my REST APIs</h1>`)
+// test database connection
+database.connect((error) => {
+    if (error) {
+        console.log('error : ', error)
+    }
+    console.log(`databse is connected, threadId : ${database.threadId}`)
 })
 
-// setup routes
-const routes = require('./routers')
-app.use('/api', routes.clientRoutes)
+// define main route
+app.get('/', (req, res) => res.status(200).send('<h1>Wellcome to My RESTAPIs</h1>'))
 
-// binding app into localhost
-const PORT = 5000
-app.listen(PORT, () => console.log(`API running at port : ${PORT}`))
+// setup routes
+const routers = require('./routers')
+app.use('/api', routers.client_routers)
+
+// binding to local port
+const PORT = process.env.PORT
+app.listen(PORT, () => console.log(`API is running at port : ${PORT}`))

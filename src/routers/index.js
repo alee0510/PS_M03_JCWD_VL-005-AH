@@ -1,7 +1,5 @@
 // import * modules
-const clientRoutes = require('./client-routes')
+const client_routers = require('./client-routers')
 
 // export * modules
-module.exports = {
-    clientRoutes
-}
+module.exports = { client_routers }
