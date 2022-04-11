@@ -5,24 +5,40 @@ const http_status = require('../helpers/http-status-code')
 
 // GET : all students data
 module.exports.getStudents = async (req, res) => {
+    // capture all request query params
+    const limit = Number(req.query._limit) || 5
+    const page = Number(req.query._page) || 1
+    const offset = (page - 1) * limit
+    const sort = req.query._sort || 'id'
+    const order = req.query._order || 'ASC'
+
+    console.log('limit : ', limit, 'page : ', page)
+
     // define query
     const GET_STUDENTS = `
         SELECT st.id, st.studentId, st.name, st.email, pg.program, ct.city
         FROM students AS st
         JOIN program AS pg ON pg.id = st.programId
         JOIN city AS ct ON ct.id = st.cityId
-        LIMIT 5;
+        ORDER BY ${'st.' + sort} ${order}
+        LIMIT ${database.escape(offset)}, ${database.escape(limit)};
     `
+    const GET_TOTAL = `SELECT COUNT(*) AS total FROM students;`
 
     // execute query
     try {
         const [ STUDENTS ] = await database.execute(GET_STUDENTS)
+        const [ TOTAL ] = await database.execute(GET_TOTAL)
 
-        const respond = new createRespond(http_status.OK, 'GET', true, 50, 5, STUDENTS)
+        const respond = new createRespond(http_status.OK, 'GET', true, TOTAL[0].total, limit, STUDENTS)
         res.status(respond.status).send(respond)
     } catch (error) {
-        console.log('error : ', error)
-        res.status(500).send('Internal service error.')
+        const isTrusted = error instanceof createError
+        if (!isTrusted) {
+            error = new createError(http_status.INTERNAL_SERVICE_ERROR, error.sqlMessage)
+            console.log(error)
+        }
+        res.status(error.status).send(error)
     }
 }
 
@@ -54,13 +70,12 @@ module.exports.getStudentById = async (req, res) => {
     } catch (error) {
         const isTrusted = error instanceof createError
         if (!isTrusted) {
-            error = new createError()
+            error = new createError(http_status.INTERNAL_SERVICE_ERROR, error.sqlMessage)
             console.log(error)
         }
         res.status(error.status).send(error)
     }
 }
 
-// PRACTICES
-// URL : GET /api/students
-// DO : pagination -> QUERY => ?_page=1&_limit=5
+// TODO : 1. POST : add new students, do input validation and error handling
+// TODO : 2. PACTH : edit student data by its studentId, do input validation and error handling
