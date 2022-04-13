@@ -32,7 +32,7 @@ module.exports.getStudents = async (req, res) => {
         const [ STUDENTS ] = await database.execute(GET_STUDENTS)
         const [ TOTAL ] = await database.execute(GET_TOTAL)
 
-        const respond = new createRespond(http_status.OK, 'GET', true, TOTAL[0].total, limit, STUDENTS)
+        const respond = new createRespond(http_status.OK, 'get', true, TOTAL[0].total, limit, STUDENTS)
         res.status(respond.status).send(respond)
     } catch (error) {
         const isTrusted = error instanceof createError
@@ -67,7 +67,7 @@ module.exports.getStudentById = async (req, res) => {
             throw new createError(http_status.BAD_REQUEST, 'bad request.')
         }
 
-        const respond = new createRespond(http_status.OK, 'GET', true, 1, 1, STUDENT[0])
+        const respond = new createRespond(http_status.OK, 'get', true, 1, 1, STUDENT[0])
         res.status(respond.status).send(respond)
     } catch (error) {
         const isTrusted = error instanceof createError
@@ -105,7 +105,7 @@ module.exports.postStudent = async (req, res) => {
         body.id = INFO.insertId
 
         // send res to client side
-        const respond = new createRespond(http_status.CREATED, 'POST', true, 1, 1, body)
+        const respond = new createRespond(http_status.CREATED, 'insert', true, 1, 1, body)
         res.status(respond.status).send(respond)
 
     } catch (error) {
@@ -147,10 +147,48 @@ module.exports.patchStudent = async (req, res) => {
         }
 
         // define query update
-        const UPDATE_STUDENTS = `UPDATE students SET ?;`
-        
+        let values = []
+        for (let key in body) {
+            values.push(`${key} = '${body[key]}'`)
+        }
+        const UPDATE_STUDENTS = `UPDATE students SET ${values} WHERE studentId = ?;`
+        console.log('query : ', UPDATE_STUDENTS)
+        const [ INFO ] = await database.execute(UPDATE_STUDENTS, [studentId])
+        console.log('info : ', INFO)
 
-        res.status(200).send('ok')
+        // send respond to client-side
+        const respond = new createRespond(http_status.OK, 'update', true, 1, 1, INFO.info)
+        res.status(respond.status).send(respond)
+    } catch (error) {
+        const isTrusted = error instanceof createError
+        if (!isTrusted) {
+            error = new createError(http_status.INTERNAL_SERVICE_ERROR, error.sqlMessage)
+            console.log(error)
+        }
+        res.status(error.status).send(error)
+    }
+}
+
+// DELETE
+module.exports.deleteStudent = async (req, res) => {
+    // get studentId
+    const studentId = req.params.studentId
+    try {
+        // check student data by its studentId
+        const CHECK_STUDENT = `SELECT id FROM students WHERE studentId = ?;`
+        const [ STUDENT ] = await database.execute(CHECK_STUDENT, [studentId])
+        if (!STUDENT.length) {
+            throw new createError(http_status.NOT_FOUND, 'id not found.')
+        }
+
+        // define query delete
+        const DELETE_STUDENT = `DELETE FROM students WHERE studentId = ?;`
+        const [ INFO ] = await database.execute(DELETE_STUDENT, [studentId])
+        console.log('info : ', INFO)
+
+        // send respond to client-side
+        const respond = new createRespond(http_status.OK, 'delete', true, 1, 1, INFO.info)
+        res.status(respond.status).send(respond)
     } catch (error) {
         const isTrusted = error instanceof createError
         if (!isTrusted) {

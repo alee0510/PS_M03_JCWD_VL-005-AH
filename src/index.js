@@ -1,5 +1,6 @@
 const express = require('express')
 const dotenv = require('dotenv')
+const cors = require('cors')
 dotenv.config()
 
 const database = require('./config')
@@ -9,6 +10,7 @@ const app = express()
 
 // config middleware
 app.use(express.json())
+app.use(cors())
 
 // test database connection
 database.connect((error) => {
@@ -25,6 +27,7 @@ app.get('/', (req, res) => res.status(200).send('<h1>Wellcome to My RESTAPIs</h1
 const routers = require('./routers')
 app.use('/api', routers.client_routers)
 app.use('/api', routers.student_routers)
+app.use('/api', routers.program_routers)
 
 // binding to local port
 const PORT = process.env.PORT
