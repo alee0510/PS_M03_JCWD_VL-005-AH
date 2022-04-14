@@ -14,7 +14,7 @@ module.exports.getStudents = async (req, res) => {
     const sort = req.query._sort || 'id'
     const order = req.query._order || 'ASC'
 
-    console.log('limit : ', limit, 'page : ', page)
+    // console.log('limit : ', limit, 'page : ', page)
 
     // define query
     const GET_STUDENTS = `
@@ -25,7 +25,6 @@ module.exports.getStudents = async (req, res) => {
         ORDER BY ${'st.' + sort} ${order}
         LIMIT ${database.escape(offset)}, ${database.escape(limit)};
     `
-    console.log(GET_STUDENTS)
     const GET_TOTAL = `SELECT COUNT(*) AS total FROM students;`
 
     // execute query
@@ -123,7 +122,6 @@ module.exports.postStudent = async (req, res) => {
         }
         res.status(error.status).send(error)
     }
-    
 }
 
 module.exports.patchStudent = async (req, res) => {
