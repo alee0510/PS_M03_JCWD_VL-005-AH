@@ -28,6 +28,7 @@ const routers = require('./routers')
 app.use('/api', routers.client_routers)
 app.use('/api', routers.student_routers)
 app.use('/api', routers.program_routers)
+app.use('/api', routers.city_routers)
 
 // binding to local port
 const PORT = process.env.PORT

@@ -25,6 +25,7 @@ module.exports.getStudents = async (req, res) => {
         ORDER BY ${'st.' + sort} ${order}
         LIMIT ${database.escape(offset)}, ${database.escape(limit)};
     `
+    console.log(GET_STUDENTS)
     const GET_TOTAL = `SELECT COUNT(*) AS total FROM students;`
 
     // execute query
@@ -79,7 +80,6 @@ module.exports.getStudentById = async (req, res) => {
     }
 }
 
-// TODO : 1. POST : add new students, do input validation and error handling
 module.exports.postStudent = async (req, res) => {
     // capture body
     let body = req.body // { name : , email :, cityId :, programId : }
@@ -90,6 +90,13 @@ module.exports.postStudent = async (req, res) => {
         if (error) {
             console.log('error : ', error)
             throw new createError(http_status.BAD_REQUEST, error.details[0].message)
+        }
+
+        // validation duplicate data in database
+        const CHECK_STUDENT = `SELECT id FROM students WHERE name = ? OR email = ?;`
+        const [ STUDENT ] = await database.execute(CHECK_STUDENT, [body.name, body.email])
+        if (STUDENT.length) {
+            throw new createError(http_status.BAD_REQUEST, 'bad request.')
         }
 
         // create uid
@@ -119,7 +126,6 @@ module.exports.postStudent = async (req, res) => {
     
 }
 
-// TODO : 2. PATCH : edit student data by its studentId, do input validation and error handling
 module.exports.patchStudent = async (req, res) => {
     // studentId
     const studentId = req.params.studentId
