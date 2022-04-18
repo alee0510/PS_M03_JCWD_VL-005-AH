@@ -15,14 +15,6 @@ function urlRequestLogger (req, res, next) {
     next()
 }
 
-function private (req, res, next) {
-    if (!req.token) {
-        res.status(401).send('Un-authorized.')
-    }
-
-    next()
-}
-
 // config middleware
 app.use(express.json())
 app.use(cors())
@@ -42,9 +34,10 @@ app.get('/', (req, res) => res.status(200).send('<h1>Wellcome to My RESTAPIs</h1
 // setup routes
 const routers = require('./routers')
 app.use('/api', routers.client_routers)
-app.use('/api', private, routers.student_routers)
+app.use('/api', routers.student_routers)
 app.use('/api', routers.program_routers)
 app.use('/api', routers.city_routers)
+app.use('/api', routers.user_routers)
 
 // binding to local port
 const PORT = process.env.PORT
