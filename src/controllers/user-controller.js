@@ -1,11 +1,11 @@
 const uuid = require('uuid')
 const bcrypt = require('bcrypt')
 const otp_generator = require('otp-generator')
-const nodemailer = require('nodemailer')
 const database = require('../config').promise()
 const http_status = require('../helpers/http-status-code')
 const createError = require('../helpers/create-error')
 const createRespond = require('../helpers/create-respond')
+const transporter = require('../helpers/transporter')
 const { registerSchema } = require('../helpers/validation-schema')
 
 // REGISTER HANLDER
@@ -58,17 +58,8 @@ module.exports.register = async (req, res) => {
         await database.execute(INSERT_TOKEN)
 
         // 9. send otp token to our client
-        const transporter = nodemailer.createTransport({
-            service : 'gmail',
-            auth : {
-                user : 'ali.muksin0510@gmail.com',
-                pass : process.env.MAIL_PASS
-            },
-            tls : { rejectUnauthorized : false }
-        })
-
         await transporter.sendMail({
-            from : '<admin/> ali.muksin0510@gmail.com',
+            from : '"admin" <ali.muksin0510@gmail.com>',
             to : 'fullstack.manager.pwdk@gmail.com',
             subject : 'OTP verification',
             html : `
@@ -192,5 +183,50 @@ module.exports.verifyUser = async (req, res) => {
 
 // REFRESH TOKEN
 module.exports.refreshToken = async (req, res) => {
+    const token = req.body.token
+    const UID = req.header('UID')
+    try {
+        // check token
+        const CHECK_TOKEN = `SELECT id FROM tokens WHERE otp = ? AND uid = ?;`
+        const [ TOKEN ] = await database.execute(CHECK_TOKEN, [token, UID])
+        if (!TOKEN.length) {
+            throw new createError(http_status.BAD_REQUEST, 'invalid token.')
+        }
 
+        // if token exists -> refresh token
+        const new_token = otp_generator.generate(6, { upperCaseAlphabets: false, specialChars: false })
+        const now = new Date()
+        console.log('new token : ', new_token)
+        console.log('created at : ', now)
+
+        // define query update
+        const UPDATE_TOKEN = `UPDATE tokens SET otp = ?, createdAt = ? WHERE uid = ?;`
+        const [ INFO ] = await database.execute(UPDATE_TOKEN, [new_token, now, UID])
+        console.log(INFO.info)
+
+        // send token to client
+        await transporter.sendMail({
+            from : '"admin" <ali.muksin0510@gmail.com>',
+            to : 'fullstack.manager.pwdk@gmail.com',
+            subject : 'OTP verification',
+            html : `
+                <p>please verify your account using this code.</p>
+                <p>code : <b>${new_token}</b></p>
+
+                <p>NOTE : do not share this code.</p>
+            `
+        })
+
+        // create respond
+        const respond = new createRespond(http_status.OK, 'update token', true, 1, 1, INFO.info)
+        res.status(respond.status).send(respond)
+    } catch (error) {
+        console.log('error : ', error)
+        const isTrusted = error instanceof createError
+        if (!isTrusted) {
+            error = new createError(http_status.INTERNAL_SERVICE_ERROR, error.sqlMessage)
+            console.log(error)
+        }
+        res.status(error.status).send(error)
+    }
 }
