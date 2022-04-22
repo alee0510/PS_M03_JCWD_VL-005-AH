@@ -272,12 +272,47 @@ module.exports.login = async (req, res) => {
         }
 
         // 4. create JWT Token
-        const token = JWT.sign({ uid : USER[0].uid }, process.env.SECRET_KEY, { expiresIn : '30000'})
+        const token = JWT.sign({ uid : USER[0].uid }, process.env.SECRET_KEY)
 
         // create respond
         delete USER[0].password
         const respond = new createRespond(http_status.OK, 'login', true, 1, 1, USER[0])
         res.header('Auth-Token', `Bearer ${token}`).send(respond)
+    } catch (error) {
+        console.log('error : ', error)
+        const isTrusted = error instanceof createError
+        if (!isTrusted) {
+            error = new createError(http_status.INTERNAL_SERVICE_ERROR, error.sqlMessage)
+            console.log(error)
+        }
+        res.status(error.status).send(error)
+    }
+}
+
+// KEEPLOGIN
+module.exports.keeplogin = async (req, res) => {
+    // const token = req.header('Auth-Token')
+    const uid = req.uid
+    try {
+        // // 1. check token
+        // if (!token) {
+        //     throw new createError(http_status.UNAUTHORIZHED, 'un-authorized.')
+        // }
+
+        // // 2. if token exist -> validate token
+        // const { uid } = JWT.verify(token, process.env.SECRET_KEY)
+        // if (!uid) {
+        //     throw new createError(http_status.BAD_REQUEST, 'invalid token.')
+        // }
+
+        // 3. if token valid -> then do query to get user's data
+        const GET_USER = `SELECT * FROM users WHERE uid = ?;`
+        const [ USER ] = await database.execute(GET_USER, [uid])
+
+        // 4. create respond
+        delete USER[0].password
+        const respond = new createRespond(http_status.OK, 'keelogin', true, 1, 1, USER[0])
+        res.status(respond.status).send(respond)
     } catch (error) {
         console.log('error : ', error)
         const isTrusted = error instanceof createError
