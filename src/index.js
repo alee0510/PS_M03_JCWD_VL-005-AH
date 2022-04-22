@@ -17,7 +17,7 @@ function urlRequestLogger (req, res, next) {
 
 // config middleware
 app.use(express.json())
-app.use(cors({ exposedHeaders : 'UID' }))
+app.use(cors({ exposedHeaders : ['UID', 'Auth-Token'] }))
 app.use(urlRequestLogger)
 
 // test database connection

@@ -1,12 +1,13 @@
 const uuid = require('uuid')
 const bcrypt = require('bcrypt')
 const otp_generator = require('otp-generator')
+const JWT = require('jsonwebtoken')
 const database = require('../config').promise()
 const http_status = require('../helpers/http-status-code')
 const createError = require('../helpers/create-error')
 const createRespond = require('../helpers/create-respond')
 const transporter = require('../helpers/transporter')
-const { registerSchema } = require('../helpers/validation-schema')
+const { registerSchema, loginSchema } = require('../helpers/validation-schema')
 
 // REGISTER HANLDER
 module.exports.register = async (req, res) => {
@@ -60,7 +61,7 @@ module.exports.register = async (req, res) => {
         // 9. send otp token to our client
         await transporter.sendMail({
             from : '"admin" <ali.muksin0510@gmail.com>',
-            to : 'fullstack.manager.pwdk@gmail.com',
+            to : `${email}`,
             subject : 'OTP verification',
             html : `
                 <p>please verify your account using this code.</p>
@@ -187,15 +188,24 @@ module.exports.refreshToken = async (req, res) => {
     const UID = req.header('UID')
     try {
         // check token
-        const CHECK_TOKEN = `SELECT id FROM tokens WHERE otp = ? AND uid = ?;`
+        const CHECK_TOKEN = `SELECT createdAt FROM tokens WHERE otp = ? AND uid = ?;`
         const [ TOKEN ] = await database.execute(CHECK_TOKEN, [token, UID])
         if (!TOKEN.length) {
             throw new createError(http_status.BAD_REQUEST, 'invalid token.')
         }
 
+        // if token exist -> check expired or not?
+        const now = new Date()
+        const current = now.getTime()
+        const created = new Date(TOKEN[0].createdAt).getTime()
+        const step = current - created
+        const remaining = Math.floor((30000 - step) / 1000) // milisecons
+        if (step <= 30000) {
+            throw new createError(http_status.BAD_REQUEST, `please wait for ${remaining}s to refresh the token.`)
+        }
+
         // if token exists -> refresh token
         const new_token = otp_generator.generate(6, { upperCaseAlphabets: false, specialChars: false })
-        const now = new Date()
         console.log('new token : ', new_token)
         console.log('created at : ', now)
 
@@ -204,10 +214,14 @@ module.exports.refreshToken = async (req, res) => {
         const [ INFO ] = await database.execute(UPDATE_TOKEN, [new_token, now, UID])
         console.log(INFO.info)
 
+        // get email client
+        const GET_EMAIL = `SELECT email FROM users WHERE uid = ?;`
+        const [ EMAIL ] = await database.execute(GET_EMAIL, [UID])
+
         // send token to client
         await transporter.sendMail({
             from : '"admin" <ali.muksin0510@gmail.com>',
-            to : 'fullstack.manager.pwdk@gmail.com',
+            to : `${EMAIL[0].email}`,
             subject : 'OTP verification',
             html : `
                 <p>please verify your account using this code.</p>
@@ -220,6 +234,50 @@ module.exports.refreshToken = async (req, res) => {
         // create respond
         const respond = new createRespond(http_status.OK, 'update token', true, 1, 1, INFO.info)
         res.status(respond.status).send(respond)
+    } catch (error) {
+        console.log('error : ', error)
+        const isTrusted = error instanceof createError
+        if (!isTrusted) {
+            error = new createError(http_status.INTERNAL_SERVICE_ERROR, error.sqlMessage)
+            console.log(error)
+        }
+        res.status(error.status).send(error)
+    }
+}
+
+
+// LOGIN
+module.exports.login = async (req, res) => {
+    const { username, password } = req.body
+    try {
+        // 1. validation req.body format -> according to our schema
+        const { error } = loginSchema.validate(req.body)
+        if (error) {
+            throw new createError(http_status.BAD_REQUEST, error.details[0].message)
+        }
+
+        // 2. data validation -> if user exist or not?
+        const CHECK_USER = `SELECT * FROM users WHERE username = ?;`
+        const [ USER ] = await database.execute(CHECK_USER, [username])
+        if (!USER.length) {
+            throw new createError(http_status.BAD_REQUEST, 'user is not registered.')
+        }
+
+        // 3. if user exist in our database -> validate password ->  do authentication
+        // -> check password -> req.body.password vs password from our database
+        const valid = await bcrypt.compare(password, USER[0].password)
+        console.log('is valid : ', valid)
+        if(!valid) {
+            throw new createError(http_status.BAD_REQUEST, 'invalid password.')
+        }
+
+        // 4. create JWT Token
+        const token = JWT.sign({ uid : USER[0].uid }, process.env.SECRET_KEY, { expiresIn : '30000'})
+
+        // create respond
+        delete USER[0].password
+        const respond = new createRespond(http_status.OK, 'login', true, 1, 1, USER[0])
+        res.header('Auth-Token', `Bearer ${token}`).send(respond)
     } catch (error) {
         console.log('error : ', error)
         const isTrusted = error instanceof createError
