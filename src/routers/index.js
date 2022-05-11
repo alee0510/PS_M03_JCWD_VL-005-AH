@@ -4,6 +4,7 @@ const student_routers = require('./student-routers')
 const program_routers = require('./program-routers')
 const city_routers = require('./city-routers')
 const user_routers = require('./user-routers')
+const upload_routers = require('./upload-routers')
 
 // export * modules
 module.exports = { 
@@ -11,5 +12,6 @@ module.exports = {
     student_routers,
     program_routers,
     city_routers,
-    user_routers
+    user_routers,
+    upload_routers
 }

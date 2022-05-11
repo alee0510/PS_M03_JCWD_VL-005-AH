@@ -16,9 +16,12 @@ function urlRequestLogger (req, res, next) {
 }
 
 // config middleware
-app.use(express.json())
+app.use(express.json()) // req.body
 app.use(cors({ exposedHeaders : ['UID', 'Auth-Token'] }))
 app.use(urlRequestLogger)
+
+// open access to public folder
+app.use(express.static('public'))
 
 // test database connection
 database.connect((error) => {
@@ -38,6 +41,7 @@ app.use('/api', routers.student_routers)
 app.use('/api', routers.program_routers)
 app.use('/api', routers.city_routers)
 app.use('/api', routers.user_routers)
+app.use('/api', routers.upload_routers)
 
 // binding to local port
 const PORT = process.env.PORT

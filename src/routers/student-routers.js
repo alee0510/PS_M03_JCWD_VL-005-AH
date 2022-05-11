@@ -4,11 +4,11 @@ const routers = require('express').Router()
 const { student } = require('../controllers')
 
 // define routes
-routers.get('/students', student.getStudents)
-routers.get('/students/:studentId', student.getStudentById)
-routers.post('/students', student.postStudent)
-routers.patch('/students/:studentId', student.patchStudent)
-routers.delete('/students/:studentId', student.deleteStudent)
+routers.get('/', student.getStudents)
+routers.get('/:studentId', student.getStudentById)
+routers.post('/', student.postStudent)
+routers.patch('/:studentId', student.patchStudent)
+routers.delete('/:studentId', student.deleteStudent)
 
 // export * modules
 module.exports = routers
