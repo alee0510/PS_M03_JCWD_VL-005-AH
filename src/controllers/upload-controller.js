@@ -1,7 +1,10 @@
+const fs = require('fs')
+const path = require('path')
 const database = require('../config').promise()
 const createError = require('../helpers/create-error')
 const createRespond = require('../helpers/create-respond')
 const http_status = require('../helpers/http-status-code')
+const dir = './public/profiles/'
 
 module.exports.add = async (req, res) => {
     try {
@@ -23,8 +26,10 @@ module.exports.add = async (req, res) => {
         res.status(respond.status).send(respond)
     } catch (error) {
         console.log('error : ', error)
+
         // delete file 
-        
+        fs.unlinkSync(path.join(dir + req.file.filename))
+
         const isTrusted = error instanceof createError
         if (!isTrusted) {
             error = new createError(http_status.INTERNAL_SERVICE_ERROR, error.sqlMessage)
